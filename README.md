@@ -1,0 +1,2 @@
+# error
+application error class
