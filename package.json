@@ -4,7 +4,8 @@
   "description": "codeshare application error class",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "istanbul cover _mocha ./test && istanbul --text check-coverage --statements 100 --functions 100 --branches 100 --lines 100",
+    "test-watch": "nodemon -x mocha ./test"
   },
   "repository": {
     "type": "git",
@@ -23,5 +24,10 @@
     "bunyan": "^1.8.1",
     "error-to-json": "^1.0.0",
     "http-errors": "^1.4.0"
+  },
+  "devDependencies": {
+    "code": "^3.0.0",
+    "istanbul": "^0.4.3",
+    "mocha": "^2.5.1"
   }
 }
