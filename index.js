@@ -3,6 +3,7 @@
 const assertArgs = require('assert-args')
 const compose = require('101/compose')
 const defaults = require('101/defaults')
+const _errToJSON = require('error-to-json')
 const equals = require('101/equals')
 const exists = require('101/exists')
 const not = require('101/not')
@@ -12,6 +13,20 @@ const pluck = require('101/pluck')
 
 const assertErr = function (err) {
   AppError.assert(!exists(err) || err instanceof Error, 500, '`err` must be an `Error`', null, { invalidErr: err  })
+}
+
+const errToJSON = function () {
+  const err = this
+  const json = _errToJSON(err)
+  if (json.data) {
+    if (json.data.err) {
+      json.data.err = _errToJSON(json.data.err)
+    }
+    if (json.data.errs) {
+      json.data.errs = json.data.errs.map(_errToJSON)
+    }
+  }
+  return json
 }
 
 const throwErr = function (err) {
@@ -64,6 +79,7 @@ const AppError = module.exports = class AppError extends Error {
     const props = pick(args, 'data')
     const err = createError(args.status, args.message, props)
     err.stack += args.stack
+    err.toJSON = errToJSON
     return err
   }
   /**
