@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/Codeshare/error",
   "dependencies": {
-    "101": "^1.5.0",
+    "101": "^1.6.2",
     "assert-args": "^1.1.0",
     "assert-env": "^0.6.0",
     "bunyan": "^1.8.1",

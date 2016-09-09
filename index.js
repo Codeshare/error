@@ -2,12 +2,14 @@
 
 const assertArgs = require('assert-args')
 const compose = require('101/compose')
+const createError = require('http-errors')
 const defaults = require('101/defaults')
 const _errToJSON = require('error-to-json')
 const equals = require('101/equals')
 const exists = require('101/exists')
+const HttpError = require('http-errors').HttpError
 const not = require('101/not')
-const createError = require('http-errors')
+const omit = require('101/omit')
 const pick = require('101/pick')
 const pluck = require('101/pluck')
 
@@ -62,25 +64,39 @@ const AppError = module.exports = class AppError extends Error {
       stack: ''
     })
     args.data = Object.assign({}, args.data) // shallow copy
+    if (args.err) {
+      args.data.err = args.err
+    }
     if (args.data.errs) {
       if (args.data.errs.length === 1) {
-        args.err = args.data.errs[0]
+        args.data.err = args.data.errs[0]
         delete args.data.errs
       } else {
         args.message = args.message || 'multiple errors'
         args.data.errs.forEach((err) => extendStack(args, err))
       }
     }
-    if (args.err) {
-      args.message = args.message || args.err.message
-      extendStack(args, args.err)
-      args.data.err = args.err
+    const dataWithoutErr = omit(args.data, 'err')
+    if (args.data.err) {
+      args.message = args.message || args.data.err.message
+      extendStack(args, args.data.err)
     }
     const props = pick(args, 'data')
     const err = createError(args.status, args.message, props)
     err.stack += args.stack
+    if (Object.keys(dataWithoutErr)) {
+      err.stack += '\n--data--\n' + JSON.stringify(dataWithoutErr, null, 2)
+    }
     err.toJSON = errToJSON
     return err
+  }
+  /**
+   * verify err is an instanceof AppError..
+   * @param  {Error} err
+   * @return {Boolean}
+   */
+  static instanceOf (err) {
+    return err instanceof HttpError
   }
   /**
    * wrap an error
@@ -112,6 +128,19 @@ const AppError = module.exports = class AppError extends Error {
    * @return {Function} (err) => throw AppError.wrap(err)
    */
   static throw (status, message, data) {
+    return compose(
+      throwErr,
+      this.wrap(status, message, data)
+    )
+  }
+  /**
+   * wrap and throw an error
+   * @param  {Integer} status
+   * @param  {String} message
+   * @param  {Object} data
+   * @return {Function} (err) => throw AppError.wrap(err)
+   */
+  static rethrow (status, message, data) {
     return compose(
       throwErr,
       this.wrap(status, message, data)
