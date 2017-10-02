@@ -84,8 +84,14 @@ const AppError = module.exports = class AppError extends Error {
     const props = pick(args, 'data')
     const err = createError(args.status, args.message, props)
     err.stack += args.stack
+    let dataStr
+    try {
+      dataStr = JSON.stringify(dataWithoutErr, null, 2)
+    } catch (err) {
+      dataStr = 'keys: ' + Object.keys(dataWithoutErr)
+    }
     if (Object.keys(dataWithoutErr)) {
-      err.stack += '\n--data--\n' + JSON.stringify(dataWithoutErr, null, 2)
+      err.stack += '\n--data--\n' + dataStr
     }
     err.toJSON = errToJSON
     return err
